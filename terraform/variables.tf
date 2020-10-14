@@ -3,5 +3,5 @@ variable "client_secret" {
 }
 
 variable "vmprefix1" {
-  default = "destino"
+  default = "Monitor"
 }
