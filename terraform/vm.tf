@@ -52,14 +52,16 @@ resource "azurerm_virtual_machine" "main" {
     connection {
       type = "ssh"
       user = var.user1
-      password = var.pass1
+      //password = var.pass1
       host = azurerm_public_ip.PubIP.ip_address
       insecure = true
+      private_key = file("~/.ssh/id_rsa")
+      timeout = "5m"
     }
     inline = [
       "echo ${var.pass1} | sudo -S -k yum update -y",
-      "sudo chmod 777 /tmp/script.sh",
-      "/tmp/script.sh"
+      "echo ${var.pass1} | sudo -S -k chmod +x /tmp/script.sh",
+      "echo ${var.pass1} | sudo -S -k /tmp/script.sh ${var.pass1}",
     ]
   }
 

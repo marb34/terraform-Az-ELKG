@@ -1,8 +1,8 @@
 #!/bin/bash
 
-sudo yum -y install java-1.8.0-openjdk  java-1.8.0-openjdk-devel;
+echo $1 | sudo -S -k yum -y install java-1.8.0-openjdk  java-1.8.0-openjdk-devel;
 
-cat <<EOF | sudo tee /etc/profile.d/java8.sh
+cat <<EOF | sudo -S tee /etc/profile.d/java8.sh
 export JAVA_HOME=/usr/lib/jvm/jre-openjdk
 export PATH=\$PATH:\$JAVA_HOME/bin
 export CLASSPATH=.:\$JAVA_HOME/jre/lib:\$JAVA_HOME/lib:\$JAVA_HOME/lib/tools.jar
@@ -10,7 +10,7 @@ EOF
 
 source /etc/profile.d/java8.sh
 
-cat <<EOF | sudo tee /etc/yum.repos.d/elasticsearch.repo
+cat <<EOF | sudo -S tee /etc/yum.repos.d/elasticsearch.repo
 [elasticsearch-7.x]
 name=Elasticsearch repository for 7.x packages
 baseurl=https://artifacts.elastic.co/packages/oss-7.x/yum
@@ -21,9 +21,9 @@ autorefresh=1
 type=rpm-md
 EOF
 
-sudo yum clean all
-sudo yum makecache
+echo $1 | sudo -S -k yum clean all
+echo $1 | sudo -S - k yum makecache
 
-sudo yum -y install elasticsearch-oss
+echo $1 | sudo -S -k yum -y install elasticsearch-oss
 
 rpm -qi elasticsearch-oss

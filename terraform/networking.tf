@@ -6,7 +6,7 @@ resource "azurerm_resource_group" "Terraform-test" {
 
 # Create a virtual network within the resource group
 resource "azurerm_virtual_network" "VN1" {
-  name                = "TerraformVN1"
+  name                = "${var.vmprefix1}VN1"
   resource_group_name = azurerm_resource_group.Terraform-test.name
   location            = azurerm_resource_group.Terraform-test.location
   address_space       = ["10.10.0.0/16"]
@@ -21,7 +21,7 @@ resource "azurerm_subnet" "SubN1" {
 }
 
 resource "azurerm_public_ip" "PubIP" {
-  name                = "acceptanceTestPublicIp1"
+  name                = "${var.vmprefix1}PublicIp1"
   resource_group_name = azurerm_resource_group.Terraform-test.name
   location            = azurerm_resource_group.Terraform-test.location
   allocation_method   = "Static"
