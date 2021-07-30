@@ -18,19 +18,51 @@ resource "azurerm_virtual_machine" "main" {
     version   = "latest"
   }
   storage_os_disk {
-    name              = "myosdisk1"
+    name              = "monosdisk1"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
   }
   os_profile {
-    computer_name  = "hostname"
-    admin_username = "testadmin"
-    admin_password = "Password1234!"
+    computer_name  = "monitor"
+    admin_username = var.user1
+    admin_password = var.pass1
   }
   os_profile_linux_config {
     disable_password_authentication = false
+    ssh_keys {
+      path = "/home/${var.user1}/.ssh/authorized_keys"
+      key_data = file("~/.ssh/id_rsa.pub")
+    }
   }
+
+  provisioner "file" {
+    connection {
+        type = "ssh"
+        user = var.user1
+        password = var.pass1
+        host = azurerm_public_ip.PubIP.ip_address
+        insecure = true
+    }
+    source = "files/script.sh"
+    destination = "/tmp/script.sh"
+  }
+
+  provisioner "remote-exec" {
+    connection {
+      type = "ssh"
+      user = var.user1
+      password = var.pass1
+      host = azurerm_public_ip.PubIP.ip_address
+      insecure = true
+    }
+    inline = [
+      "echo ${var.pass1} | sudo -S -k yum update -y",
+      "sudo chmod 777 /tmp/script.sh",
+      "/tmp/script.sh"
+    ]
+  }
+
   tags = {
     environment = "staging"
   }
