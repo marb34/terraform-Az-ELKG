@@ -1,3 +1,8 @@
+resource "azurerm_network_interface_security_group_association" "monSG" {
+  network_interface_id = azurerm_network_interface.main.id
+  network_security_group_id = azurerm_network_security_group.mon-nsg.id
+}
+
 resource "azurerm_virtual_machine" "main" {
   name                  = "${var.vmprefix1}-vm"
   location              = azurerm_resource_group.Terraform-test.location
@@ -26,10 +31,10 @@ resource "azurerm_virtual_machine" "main" {
   os_profile {
     computer_name  = "monitor"
     admin_username = var.user1
-    admin_password = var.pass1
+    //admin_password = var.pass1
   }
   os_profile_linux_config {
-    disable_password_authentication = false
+    disable_password_authentication = true
     ssh_keys {
       path = "/home/${var.user1}/.ssh/authorized_keys"
       key_data = file("~/.ssh/id_rsa.pub")
@@ -38,11 +43,13 @@ resource "azurerm_virtual_machine" "main" {
 
   provisioner "file" {
     connection {
-        type = "ssh"
-        user = var.user1
-        password = var.pass1
-        host = azurerm_public_ip.PubIP.ip_address
-        insecure = true
+      type = "ssh"
+      user = var.user1
+      //password = var.pass1
+      host = azurerm_public_ip.PubIP.ip_address
+      private_key = file("~/.ssh/id_rsa")
+      insecure = true
+      timeout = "2m"
     }
     source = "files/script.sh"
     destination = "/tmp/script.sh"
@@ -59,9 +66,9 @@ resource "azurerm_virtual_machine" "main" {
       timeout = "5m"
     }
     inline = [
-      "echo ${var.pass1} | sudo -S -k yum update -y",
-      "echo ${var.pass1} | sudo -S -k chmod +x /tmp/script.sh",
-      "echo ${var.pass1} | sudo -S -k /tmp/script.sh ${var.pass1}",
+      "sudo yum update -y",
+      "sudo chmod +x /tmp/script.sh",
+      "sudo /tmp/script.sh",
     ]
   }
 

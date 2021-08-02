@@ -1,19 +1,48 @@
 #!/bin/bash
 
-echo $1 | sudo -S -k yum -y install java-1.8.0-openjdk  java-1.8.0-openjdk-devel;
+sudo yum -y install java-11-openjdk  java-11-openjdk-devel;
 
-cat <<EOF | sudo -S tee /etc/profile.d/java8.sh
+cat <<EOF | sudo tee /etc/profile.d/java11.sh
 export JAVA_HOME=/usr/lib/jvm/jre-openjdk
-export PATH=\$PATH:\$JAVA_HOME/bin
+export ES_JAVA_HOME=/usr/lib/jvm/jre-openjdk
+export PATH=\$PATH:\$JAVA_HOME/bin:\$ES_JAVA_HOME/bin
 export CLASSPATH=.:\$JAVA_HOME/jre/lib:\$JAVA_HOME/lib:\$JAVA_HOME/lib/tools.jar
 EOF
 
-source /etc/profile.d/java8.sh
+source /etc/profile.d/java11.sh
 
-cat <<EOF | sudo -S tee /etc/yum.repos.d/elasticsearch.repo
-[elasticsearch-7.x]
+#Installing Elasticsearch
+
+rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+
+cat <<EOF | sudo tee /etc/yum.repos.d/elasticsearch.repo
+[elasticsearch]
 name=Elasticsearch repository for 7.x packages
-baseurl=https://artifacts.elastic.co/packages/oss-7.x/yum
+baseurl=https://artifacts.elastic.co/packages/7.x/yum
+gpgcheck=1
+gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+enabled=0
+autorefresh=1
+type=rpm-md
+EOF
+
+sudo yum clean all
+sudo yum makecache
+
+sudo yum install --enablerepo=elasticsearch elasticsearch -y
+sudo rpm -qi elasticsearch
+sudo systemctl daemon-reload
+sudo systemctl enable elasticsearch.service
+sudo systemctl start elasticsearch.service
+
+##Kibana Installation
+
+rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+
+cat <<EOF | sudo tee /etc/yum.repos.d/kibana.repo
+[kibana-7.x]
+name=Kibana repository for 7.x packages
+baseurl=https://artifacts.elastic.co/packages/7.x/yum
 gpgcheck=1
 gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
 enabled=1
@@ -21,9 +50,42 @@ autorefresh=1
 type=rpm-md
 EOF
 
-echo $1 | sudo -S -k yum clean all
-echo $1 | sudo -S - k yum makecache
+sudo yum install -y kibana
+sudo /bin/systemctl daemon-reload
+sudo /bin/systemctl enable kibana.service
+sudo systemctl start kibana.service
+sudo echo 'server.host: "0.0.0.0"' >> /etc/kibana/kibana.yml
 
-echo $1 | sudo -S -k yum -y install elasticsearch-oss
+#Install Logstash
 
-rpm -qi elasticsearch-oss
+sudo rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+cat <<EOF | sudo tee /etc/yum.repos.d/logstash.repo
+[logstash-7.x]
+name=Elastic repository for 7.x packages
+baseurl=https://artifacts.elastic.co/packages/7.x/yum
+gpgcheck=1
+gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+enabled=1
+autorefresh=1
+type=rpm-md
+EOF
+
+sudo yum install logstash -y
+
+#BEATS
+sudo rpm --import https://packages.elastic.co/GPG-KEY-elasticsearch
+cat <<EOF | sudo tee /etc/yum.repos.d/elastic.repo
+[elastic-7.x]
+name=Elastic repository for 7.x packages
+baseurl=https://artifacts.elastic.co/packages/7.x/yum
+gpgcheck=1
+gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+enabled=1
+autorefresh=1
+type=rpm-md
+EOF
+
+sudo yum install -y heartbeat-elastic
+sudo systemctl enable heartbeat-elastic
+sudo yum -y install metricbeat
+sudo systemctl enable metricbeat
