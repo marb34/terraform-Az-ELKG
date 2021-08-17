@@ -95,5 +95,27 @@ resource "azurerm_network_security_group" "mon-nsg" {
     source_address_prefix       = "*"
     destination_address_prefix  = "*"
   }
+  security_rule {
+    name                        = "elasticsearch"
+    priority                    = "103"
+    direction                   = "Inbound"
+    access                      = "Allow"
+    protocol                    = "tcp"
+    source_port_range           = "*"
+    destination_port_range      = "9200"
+    source_address_prefix       = "*"
+    destination_address_prefix  = "*"
+  }
 
+  security_rule {
+    name                        = "logstash"
+    priority                    = "104"
+    direction                   = "Inbound"
+    access                      = "Allow"
+    protocol                    = "tcp"
+    source_port_range           = "*"
+    destination_port_range      = "5044"
+    source_address_prefix       = "*"
+    destination_address_prefix  = "*"
+  }
 }

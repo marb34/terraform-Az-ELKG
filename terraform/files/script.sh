@@ -87,5 +87,16 @@ EOF
 
 sudo yum install -y heartbeat-elastic
 sudo systemctl enable heartbeat-elastic
+sudo service heartbeat-elastic start
 sudo yum -y install metricbeat
 sudo systemctl enable metricbeat
+sudo service metricbeat start
+
+#Azure logs
+curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.13.4-x86_64.rpm
+sudo rpm -vi filebeat-7.13.4-x86_64.rpm
+#enabling azure modules
+sudo filebeat modules enable azure
+sudo filebeat setup
+sudo service filebeat start
+
